@@ -6,8 +6,8 @@ import java.util.logging.*;
 
 public class HtmlUnit {
     private static volatile WebClient webClient;
-    private static final String PROXY_HOST = "142.4.203.248";
-    private static final int PROXY_PORT = 3128;
+    private static final String PROXY_HOST = "165.227.105.152";
+    private static final int PROXY_PORT = 8080;
 
     public static WebClient getWebClient() {
         WebClient localInstance = webClient;

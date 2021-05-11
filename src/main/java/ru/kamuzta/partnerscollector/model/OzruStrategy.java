@@ -25,7 +25,7 @@ public class OzruStrategy implements Strategy {
             HtmlElement htmlElement = (HtmlElement) htmlPage.getByXPath("//ul[@class='CompaniesList']").get(0);
             List<HtmlElement> partnersHtmlList = htmlElement.getByXPath("//li[@class='Company js-ds-dealer']");
 
-            for (int i = 0; i < 5; i++) { // здесь можно ставить ограничение по количеству партнеров при тестах
+            for (int i = 0; i < partnersHtmlList.size(); i++) { // здесь можно ставить ограничение по количеству партнеров при тестах
                 HtmlElement element = partnersHtmlList.get(i);
                 Partner partner = new Partner();
 

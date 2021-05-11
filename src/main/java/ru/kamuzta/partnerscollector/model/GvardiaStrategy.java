@@ -29,7 +29,7 @@ public class GvardiaStrategy implements Strategy {
             List<HtmlElement> partnersHtmlList = htmlDivision.getByXPath("//li[@class='Company js-ds-dealer ']");
             List<GeographyObject> geographyList = getGeographyList(htmlPage);
 
-            for (int i = 0; i < partnersHtmlList.size(); i++) { // здесь можно ставить ограничение по количеству партнеров при тестах
+            for (int i = 0; i < 3; i++) { // partnersHtmlList.size()здесь можно ставить ограничение по количеству партнеров при тестах
                 HtmlElement element = partnersHtmlList.get(i);
                 Partner partner = new Partner();
                 partner.setSourceSite(URL);
@@ -76,7 +76,7 @@ public class GvardiaStrategy implements Strategy {
 
     //получам залогиненную страничку, если вдруг понадобится
     private HtmlPage getLoginPage(String url, int timeout) {
-        HtmlPage page = null;
+        HtmlPage page;
         HtmlPage postPage = null;
         try {
             webClient = HtmlUnit.getWebClient();
@@ -102,7 +102,7 @@ public class GvardiaStrategy implements Strategy {
 
     //получаем страничку выбора городов для парсинга базовой информации по городам, областям и партнерам
     private HtmlPage getPage(String url, int timeout) {
-        HtmlPage page = null;
+        HtmlPage page;
         HtmlPage postPage = null;
         try {
             webClient = HtmlUnit.getWebClient();

@@ -1,17 +1,8 @@
 package ru.kamuzta.partnerscollector.view;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlSpan;
-import com.gargoylesoftware.htmlunit.javascript.SilentJavaScriptErrorListener;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import ru.kamuzta.partnerscollector.Controller;
 import ru.kamuzta.partnerscollector.entities.Partner;
 import ru.kamuzta.partnerscollector.model.HtmlUnit;
@@ -19,12 +10,16 @@ import ru.kamuzta.partnerscollector.model.HtmlUnit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class HtmlView implements View {
     private Controller controller;
     private WebClient webClient;
-    private final String partnersPath = getResultHtmlPath("partners.html");
+    private final String templatePath = getTemplatePath("template.html");
+    private final String resultPath = "D:/partners.html";
 
     @Override
     public void update(List<Partner> partners) {
@@ -44,18 +39,15 @@ public class HtmlView implements View {
         this.controller = controller;
     }
 
-    public String getResultHtmlPath(String fileName) {
-        String resultPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath() + this.getClass().getPackage().getName().replaceAll("[.]", "/");
-
-        //если в конце переданного пути отсутствует слэш - добавляем его
-        if (!resultPath.endsWith("\\") && !resultPath.endsWith("/"))
-            resultPath = resultPath + "/";
-
-        //если ос windows и путь начинается со слэша - убираем его
-        if (System.getProperty("os.name").toLowerCase().startsWith("win") && (resultPath.startsWith("\\") || resultPath.startsWith("/")))
-            resultPath = resultPath.substring(1);
-
-        return resultPath + fileName;
+    public String getTemplatePath(String fileName) {
+        URL res = getClass().getClassLoader().getResource(fileName);
+        File file = null;
+        try {
+            file = Paths.get(res.toURI()).toFile();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return file.getAbsolutePath();
     }
 
     private HtmlPage getPage(String filePath) {
@@ -71,7 +63,7 @@ public class HtmlView implements View {
 
 
     private String getUpdatedFileContent(List<Partner> partnerList) {
-        HtmlPage page = getPage(partnersPath);
+        HtmlPage page = getPage(templatePath);
 
         //клонируем блок с шаблоном и получаем из него шаблон нужной формы
         HtmlElement hiddenTemplateTr = page.getDocumentElement().getElementsByAttribute("tr", "bgcolor", "white").get(0);
@@ -130,7 +122,7 @@ public class HtmlView implements View {
     }
 
     private void updateFile(String text) {
-        try (FileWriter fileWriter = new FileWriter(new File(partnersPath))) {
+        try (FileWriter fileWriter = new FileWriter(new File(resultPath))) {
             fileWriter.write(text);
         } catch (IOException e) {
             e.printStackTrace();
@@ -140,4 +132,5 @@ public class HtmlView implements View {
     public void reloadPartnerTable() {
         controller.reloadPartners();
     }
+
 }
