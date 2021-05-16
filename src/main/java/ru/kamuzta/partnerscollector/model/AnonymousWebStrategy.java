@@ -5,39 +5,42 @@ import com.gargoylesoftware.htmlunit.html.*;
 import ru.kamuzta.partnerscollector.entities.*;
 import java.util.*;
 
-public class BusinessMenuStrategy implements Strategy {
-    private static final String URL = "https://бизнес-меню.рф";
-    private static final String URL_AUTH = "https://бизнес-меню.рф/auth/";
-    private static final String URL_CONTACTS = "https://бизнес-меню.рф/инфо/moskva/%s/контакты/";
-    private static final String USER_LOGIN = "";
-    private static final String USER_PASSWORD = "";
-
+public class AnonymousWebStrategy implements Strategy {
+    private WebSite webSite;
     private WebClient webClient;
+    private List<Partner> partnerList;
+    private List<GeographyObject> geographyList;
 
-    @Override
-    public List<Partner> getPartners() {
+    public AnonymousWebStrategy(WebSite webSite) {
+        this.webSite = webSite;
         try {
-            webClient = HtmlUnit.getWebClient();
+            this.webClient = HtmlUnit.getWebClient();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.partnerList = new ArrayList<>();
+        this.geographyList = new ArrayList<>();
+        System.out.println("AnonymousWebStrategy initialized successfully:" + webSite.name() +" "+webClient + " " + partnerList.size() +" "+ geographyList.size());
+    }
 
-        List<Partner> partnerList = new ArrayList<>();
-        HtmlPage htmlPage = getPage(URL, 3000);
+    @Override
+    public List<Partner> getPartners() {
+
+        HtmlPage htmlPage = getPage(webSite.getUrl(), 3000);
         try {
             HtmlDivision htmlDivision = (HtmlDivision) htmlPage.getByXPath("//div[@class='CitySelectWindow__suppliersWrapper']").get(0);
             List<HtmlElement> partnersHtmlList = htmlDivision.getByXPath("//li[@class='Company js-ds-dealer ']");
-            List<GeographyObject> geographyList = getGeographyList(htmlPage);
+            fillGeographyList(htmlPage);
 
-            for (int i = 0; i < partnersHtmlList.size(); i++) { // здесь можно ставить ограничение по количеству партнеров при тестах
+            for (int i = 0; i < 3; i++) { // partnersHtmlList.size() здесь можно ставить ограничение по количеству партнеров при тестах
                 HtmlElement element = partnersHtmlList.get(i);
                 Partner partner = new Partner();
-                partner.setSourceSite(URL);
+                partner.setSourceSite(webSite.getUrl());
                 String dealerId = element.getAttribute("data-dealer");
                 partner.setDealerId(dealerId);
                 partner.setName(element.getElementsByTagName("strong").get(0).getTextContent());
                 partner.setRealAddress(element.getElementsByTagName("span").get(1).getTextContent());
-                partner.setWebSite(URL);
+                partner.setWebSite(webSite.getUrl());
                 partner.setPhoneNumbers(element.getElementsByTagName("span").get(0).getTextContent());
 
                 String cityId = element.getAttribute("data-city");
@@ -76,11 +79,9 @@ public class BusinessMenuStrategy implements Strategy {
 
     //получам залогиненную страничку, если вдруг понадобится
     private HtmlPage getLoginPage(String url, int timeout) {
-        HtmlPage page = null;
         HtmlPage postPage = null;
         try {
-            webClient = HtmlUnit.getWebClient();
-            page = webClient.getPage(url);
+            HtmlPage page = webClient.getPage(url);
             webClient.waitForBackgroundJavaScript(timeout);
             //находим log-in форму, её поля и кнопку
             HtmlForm form = page.getFormByName("form_auth");
@@ -88,9 +89,9 @@ public class BusinessMenuStrategy implements Strategy {
             HtmlPasswordInput passwordField = form.getInputByName("USER_PASSWORD");
             HtmlButton button = form.getButtonByName("Login");
             //заполняем поля и нажимаем кнопку
-            loginField.setValueAttribute(USER_LOGIN);
+            loginField.setValueAttribute(webSite.getUserLogin());
             webClient.waitForBackgroundJavaScript(timeout);
-            passwordField.setValueAttribute(USER_PASSWORD);
+            passwordField.setValueAttribute(webSite.getUserPassword());
             webClient.waitForBackgroundJavaScript(timeout);
             postPage = button.click();
             webClient.waitForBackgroundJavaScript(timeout);
@@ -102,11 +103,9 @@ public class BusinessMenuStrategy implements Strategy {
 
     //получаем страничку выбора городов для парсинга базовой информации по городам, областям и партнерам
     private HtmlPage getPage(String url, int timeout) {
-        HtmlPage page = null;
         HtmlPage postPage = null;
         try {
-            webClient = HtmlUnit.getWebClient();
-            page = webClient.getPage(url);
+            HtmlPage page = webClient.getPage(url);
             webClient.waitForBackgroundJavaScript(timeout);
             HtmlSpan pseudoLink = (HtmlSpan) page.getByXPath("//span[@class='pseudoLink SuggestCity__selectOther js-city-selectOther']").get(0);
             postPage = pseudoLink.click();
@@ -119,8 +118,7 @@ public class BusinessMenuStrategy implements Strategy {
 
 
     //составляем связки между city, region, cityID, regionID в виде объектов и помещаем их в лист.
-    private List<GeographyObject> getGeographyList(HtmlPage htmlPage) {
-        List<GeographyObject> geographyList = new ArrayList<>();
+    private void fillGeographyList(HtmlPage htmlPage) {
         try {
             HtmlDivision htmlDivision = (HtmlDivision) htmlPage.getByXPath("//div[@class='CitySelectWindow__item js-levenshtein-clone']").get(0);
             List<HtmlElement> geographyHtmlList = htmlDivision.getByXPath("//li[@class='CitySelectList__item js-ds-city '] | //li[@class='CitySelectList__item js-ds-city CitySelectList__item--main js-ds-city-main']");
@@ -136,8 +134,6 @@ public class BusinessMenuStrategy implements Strategy {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return geographyList;
     }
 
     //получаем мапу, где ключ - id партнера, а значение - набор параметров со страницы контактов партнера
@@ -149,7 +145,7 @@ public class BusinessMenuStrategy implements Strategy {
             if (!partnerPropertiesMap.containsKey(dealerId)) {
                 try {
                     partnerProperties = new ArrayList<>();
-                    HtmlPage contactsPage = getPage(String.format(URL_CONTACTS, dealerId), 100);
+                    HtmlPage contactsPage = getPage(String.format(webSite.getUrlContacts(), dealerId), 500); //timeout
 
                     HtmlDivision contactsDivision = (HtmlDivision) contactsPage.getByXPath("//div[@class='Contact__group']").get(0);
                     List<HtmlDivision> contactsDivisionList = contactsDivision.getElementsByAttribute("div", "class", "ContactFeature__value");
