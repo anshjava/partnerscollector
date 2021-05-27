@@ -5,7 +5,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ru.kamuzta.partnerscollector.Controller;
 import ru.kamuzta.partnerscollector.entities.Partner;
-import ru.kamuzta.partnerscollector.model.HtmlUnit;
+import ru.kamuzta.partnerscollector.model.WebClientFactory;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -53,7 +53,7 @@ public class HtmlView implements View {
     private HtmlPage getPage(String filePath) {
         HtmlPage page = null;
         try {
-            webClient = HtmlUnit.getWebClient();
+            webClient = WebClientFactory.getWebClient();
             page = webClient.getPage("file:\\\\" + filePath);
         } catch (Exception e) {
             e.printStackTrace();

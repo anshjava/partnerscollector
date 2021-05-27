@@ -1,5 +1,7 @@
 package ru.kamuzta.partnerscollector.entities;
 
+import java.util.Objects;
+
 //Geography objects helps to link Ids and Names of region and city
 public class GeographyObject {
     private String regionId;
@@ -47,5 +49,21 @@ public class GeographyObject {
                 ", cityId='" + cityId + '\'' +
                 ", cityName='" + cityName + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass() || hashCode() != o.hashCode()) return false;
+        GeographyObject that = (GeographyObject) o;
+        return Objects.equals(regionId, that.regionId) &&
+                Objects.equals(regionName, that.regionName) &&
+                Objects.equals(cityId, that.cityId) &&
+                Objects.equals(cityName, that.cityName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(regionId, regionName, cityId, cityName);
     }
 }

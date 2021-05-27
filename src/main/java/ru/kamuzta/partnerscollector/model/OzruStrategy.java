@@ -14,7 +14,7 @@ public class OzruStrategy implements Strategy {
     @Override
     public List<Partner> getPartners() {
         try {
-            webClient = HtmlUnit.getWebClient();
+            webClient = WebClientFactory.getWebClient();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,7 +71,7 @@ public class OzruStrategy implements Strategy {
     private HtmlPage getPage(String filePath) {
         HtmlPage page = null;
         try {
-            webClient = HtmlUnit.getWebClient();
+            webClient = WebClientFactory.getWebClient();
             page = webClient.getPage("file:\\\\" + filePath);
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +83,7 @@ public class OzruStrategy implements Strategy {
     private HtmlPage getPage(String url, int timeout) {
         HtmlPage page = null;
         try {
-            webClient = HtmlUnit.getWebClient();
+            webClient = WebClientFactory.getWebClient();
             page = webClient.getPage(url);
             webClient.waitForBackgroundJavaScript(timeout);
         } catch (Exception e) {
