@@ -33,6 +33,7 @@ public class WebClientFactory {
                 }
             }
             webClientMap.remove(myProxy);
+            webClient.close();
         }
 
 
@@ -46,13 +47,16 @@ public class WebClientFactory {
         proxyQueue.add(myProxy);
 
         //Checking if webClient with specified proxy exists in map and return it if it does
-        if (webClientMap.containsKey(myProxy))
+        if (webClientMap.containsKey(myProxy)) {
+            System.out.println("Deligate Web client with proxy " + myProxy + " and has" + proxyQueue.size() + " proxies left");
             return webClientMap.get(myProxy);
+        }
 
         //Otherwise create new webClient and put it in Map
         WebClient webClient = new WebClient(BrowserVersion.FIREFOX, myProxy.getIp(),myProxy.getPort());
 
         //configuring new WebClient
+        webClient.getOptions().setTimeout(5000);
         webClient.getOptions().setCssEnabled(true);
         webClient.getOptions().setJavaScriptEnabled(true);
         webClient.getOptions().setThrowExceptionOnScriptError(false);
@@ -65,6 +69,7 @@ public class WebClientFactory {
         //put new webClient in cache
         webClientMap.put(myProxy,webClient);
 
+        System.out.println("Deligate Web client with proxy " + myProxy + " and has " + proxyQueue.size() + " proxies left");
         return webClient;
     }
 
